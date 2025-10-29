@@ -1,0 +1,20 @@
+{
+  "name": "say-yes",
+  "version": "0.1.0",
+  "description": "sayYes - a voice-first dating app prototype (Node, Express, MongoDB, Deepgram STT/TTS, Google AI Studio Image Gen)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.27.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.9.0",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^3.3.2",
+    "socket.io": "^4.7.5"
+  }
+}

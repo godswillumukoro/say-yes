@@ -1,0 +1,39 @@
+[2025-10-29T10:16:34.135Z] [0c37fbb55af9] Generate request: num=4, promptLength=251, imageUrl=/assets/4c77f0a89ee8a86b.jpeg
+[2025-10-29T10:16:34.135Z] [0c37fbb55af9] Loaded local image /Users/mac/CODE/say-yes/assets/4c77f0a89ee8a86b.jpeg (65042 bytes)
+[2025-10-29T10:16:34.135Z] [0c37fbb55af9] Upstream status=404 bodyLength=265
+[2025-10-29T10:16:34.135Z] [0c37fbb55af9] Upstream error body: {
+  "error": {
+    "code": 404,
+    "message": "models/gemini-1.5-flash is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods.",
+    "status": "NOT_FOUND"
+  }
+}
+
+[2025-10-29T10:26:29.863Z] [859eb483fe6e] Generate request: num=4, promptLength=251, imageUrl=/assets/a726244c5ade407f.jpeg
+[2025-10-29T10:26:29.863Z] [859eb483fe6e] Loaded local image /Users/mac/CODE/say-yes/assets/a726244c5ade407f.jpeg (60223 bytes)
+[2025-10-29T10:26:29.863Z] [859eb483fe6e] Upstream status=400 bodyLength=139
+[2025-10-29T10:26:29.863Z] [859eb483fe6e] Generated images count=1
+[2025-10-29T10:53:00.204Z] [2cc9d0dd0568] Generate request: num=4, promptLength=251, imageUrl=/assets/6e26c6b7b8ea8352.jpeg
+[2025-10-29T10:53:00.204Z] [2cc9d0dd0568] Loaded local image /Users/mac/CODE/say-yes/assets/6e26c6b7b8ea8352.jpeg (68540 bytes)
+[2025-10-29T10:53:00.204Z] [2cc9d0dd0568] Upstream status=400 bodyLength=139
+[2025-10-29T10:53:00.204Z] [2cc9d0dd0568] Generated images count=1
+[2025-10-29T11:19:49.339Z] [2bc41519f54c] Generate request: num=4, promptLength=251, imageUrl=/assets/c2d01bc17a856c41.jpeg
+[2025-10-29T11:19:49.339Z] [2bc41519f54c] Loaded local image /Users/mac/CODE/say-yes/assets/c2d01bc17a856c41.jpeg (73814 bytes)
+[2025-10-29T11:19:49.339Z] [2bc41519f54c] Upstream status=400 bodyLength=139
+[2025-10-29T11:19:49.339Z] [2bc41519f54c] Generated images count=1
+[2025-10-29T11:32:09.329Z] [8e9dbe8b59ec] Generate request: num=4, promptLength=251, imageUrl=/assets/32e53a52d05acd99.jpeg
+[2025-10-29T11:32:09.329Z] [8e9dbe8b59ec] Loaded local image /Users/mac/CODE/say-yes/assets/32e53a52d05acd99.jpeg (74442 bytes)
+[2025-10-29T11:32:09.329Z] [8e9dbe8b59ec] Upstream status=400 bodyLength=139
+[2025-10-29T11:32:09.329Z] [8e9dbe8b59ec] Generated images count=1
+[2025-10-29T14:20:25.964Z] [2121d6492c29] Generate request: num=4, promptLength=251, imageUrl=/assets/eeae6331c1291d7b.jpeg
+[2025-10-29T14:20:25.964Z] [2121d6492c29] Loaded local image /Users/mac/CODE/say-yes/assets/eeae6331c1291d7b.jpeg (54450 bytes)
+[2025-10-29T14:20:25.964Z] [2121d6492c29] Upstream status=400 bodyLength=139
+[2025-10-29T14:20:25.964Z] [2121d6492c29] Generated images count=1
+[2025-10-29T14:42:38.288Z] [b45f12a887ae] Generate request: num=4, promptLength=251, imageUrl=/assets/7898db5f269f0dc2.jpeg
+[2025-10-29T14:42:38.288Z] [b45f12a887ae] Loaded local image /Users/mac/CODE/say-yes/assets/7898db5f269f0dc2.jpeg (53491 bytes)
+[2025-10-29T14:42:38.288Z] [b45f12a887ae] Upstream status=400 bodyLength=139
+[2025-10-29T14:42:38.288Z] [b45f12a887ae] Generated images count=1
+[2025-10-29T17:09:10.010Z] [7187132a0016] Generate request: num=4, promptLength=251, imageUrl=/assets/d6dbcadce8bbe419.jpeg
+[2025-10-29T17:09:10.010Z] [7187132a0016] Loaded local image /Users/mac/CODE/say-yes/assets/d6dbcadce8bbe419.jpeg (69638 bytes)
+[2025-10-29T17:09:10.010Z] [7187132a0016] Upstream status=400 bodyLength=139
+[2025-10-29T17:09:10.010Z] [7187132a0016] Generated images count=1

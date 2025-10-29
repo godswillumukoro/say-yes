@@ -1,0 +1,39 @@
+[2025-10-29T09:08:52.465Z] [debug] snap_clicked 
+[2025-10-29T09:58:51.492Z] [debug] snap_clicked 
+[2025-10-29T10:08:02.651Z] [debug] snap_clicked 
+[2025-10-29T10:16:22.619Z] [debug] [capturePhoto] init 
+[2025-10-29T10:16:30.021Z] [debug] [capturePhoto] snap clicked 
+[2025-10-29T10:16:30.075Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-29T10:16:30.111Z] [debug] [capturePhoto] upload ok "/assets/4c77f0a89ee8a86b.jpeg"
+[2025-10-29T10:26:19.321Z] [debug] [capturePhoto] init 
+[2025-10-29T10:26:25.715Z] [debug] [capturePhoto] snap clicked 
+[2025-10-29T10:26:25.754Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-29T10:26:25.774Z] [debug] [capturePhoto] upload ok "/assets/a726244c5ade407f.jpeg"
+[2025-10-29T10:52:41.878Z] [debug] [capturePhoto] init 
+[2025-10-29T10:52:55.883Z] [debug] [capturePhoto] snap clicked 
+[2025-10-29T10:52:55.930Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-29T10:52:55.987Z] [debug] [capturePhoto] upload ok "/assets/6e26c6b7b8ea8352.jpeg"
+[2025-10-29T11:19:36.765Z] [debug] [capturePhoto] init 
+[2025-10-29T11:19:45.765Z] [debug] [capturePhoto] snap clicked 
+[2025-10-29T11:19:45.842Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-29T11:19:45.902Z] [debug] [capturePhoto] upload ok "/assets/c2d01bc17a856c41.jpeg"
+[2025-10-29T11:31:57.408Z] [debug] [capturePhoto] init 
+[2025-10-29T11:32:05.915Z] [debug] [capturePhoto] snap clicked 
+[2025-10-29T11:32:05.960Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-29T11:32:05.974Z] [debug] [capturePhoto] upload ok "/assets/32e53a52d05acd99.jpeg"
+[2025-10-29T14:17:12.350Z] [error] STT request failed "TypeError: Failed to fetch"
+[2025-10-29T14:20:04.008Z] [debug] [capturePhoto] init 
+[2025-10-29T14:20:21.770Z] [debug] [capturePhoto] snap clicked 
+[2025-10-29T14:20:21.809Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-29T14:20:21.826Z] [debug] [capturePhoto] upload ok "/assets/eeae6331c1291d7b.jpeg"
+[2025-10-29T14:24:06.182Z] [error] STT request failed "TypeError: Failed to fetch"
+[2025-10-29T14:40:36.422Z] [error] STT request failed "TypeError: Failed to fetch"
+[2025-10-29T14:41:54.503Z] [debug] [capturePhoto] init 
+[2025-10-29T14:42:33.754Z] [debug] [capturePhoto] snap clicked 
+[2025-10-29T14:42:33.831Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-29T14:42:33.876Z] [debug] [capturePhoto] upload ok "/assets/7898db5f269f0dc2.jpeg"
+[2025-10-29T17:08:56.311Z] [debug] [capturePhoto] init 
+[2025-10-29T17:09:06.243Z] [debug] [capturePhoto] snap clicked 
+[2025-10-29T17:09:06.324Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-29T17:09:06.354Z] [debug] [capturePhoto] upload ok "/assets/d6dbcadce8bbe419.jpeg"
+[2025-10-29T17:36:29.584Z] [error] STT request failed "TypeError: Failed to fetch"

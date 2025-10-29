@@ -1,0 +1,640 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    sans-serif;
+  background: #0f0f12;
+  color: #fff;
+}
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.card {
+  background: #15151b;
+  border: 1px solid #2a2a33;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+.btn {
+  background: #5c7cfa;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn.secondary {
+  background: #2a2a33;
+}
+.buttons {
+  display: flex;
+  gap: 12px;
+}
+.voice-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #b2f5ea;
+  display: inline-block;
+  animation: pulse 1s infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.photo-grid img {
+  width: 100%;
+  border-radius: 8px;
+}
+.center {
+  text-align: center;
+}
+.large {
+  font-size: 1.25rem;
+}
+.big {
+  font-size: 1.5rem;
+}
+.hidden {
+  display: none;
+}
+
+/* Cozy desktop background upgraded */
+.viewport-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(
+      1200px 600px at 20% 10%,
+      rgba(255, 255, 255, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 80% 90%,
+      rgba(255, 255, 255, 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      1400px 700px at 50% -20%,
+      rgba(255, 255, 255, 0.08),
+      transparent 70%
+    ),
+    linear-gradient(
+      160deg,
+      #ff6f91 0%,
+      #ff8fab 22%,
+      #ffc2d1 48%,
+      #ffd6e0 72%,
+      #ffe5ec 100%
+    );
+  position: relative;
+  overflow: hidden;
+}
+/* soft vignette */
+.viewport-bg:before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    1200px 800px at 50% 30%,
+    rgba(0, 0, 0, 0) 40%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+}
+/* subtle cat watermark remains */
+.viewport-bg:after {
+  content: "🐱";
+  position: fixed;
+  right: 5vw;
+  bottom: 4vh;
+  font-size: 20vmin;
+  opacity: 0.08;
+  filter: blur(0.6px);
+}
+
+/* Floating romantic emojis */
+.bg-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.25;
+}
+.bg-decor span {
+  position: absolute;
+  font-size: clamp(24px, 4.8vmin, 56px);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+  animation: float 14s ease-in-out infinite;
+}
+.bg-decor .rose {
+  left: 8%;
+  top: 12%;
+  animation-delay: 0s;
+  color: #e31b23;
+}
+.bg-decor .heart {
+  left: 78%;
+  top: 18%;
+  animation-delay: 2s;
+}
+.bg-decor .wine {
+  left: 12%;
+  bottom: 14%;
+  animation-delay: 4s;
+}
+/* move nails away from right/bottom watermark area */
+.bg-decor .nails {
+  left: 18%;
+  bottom: 22%;
+  animation-delay: 6s;
+}
+.bg-decor .glasses {
+  right: 22%;
+  top: 32%;
+  animation-delay: 8s;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(4deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+/* Sparkles */
+.viewport-bg .sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 8px 2px rgba(255, 255, 255, 0.65);
+  animation: twinkle 2.2s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Phone frame */
+.phone-frame {
+  width: min(390px, 100%);
+  max-width: 390px;
+  aspect-ratio: 9/19;
+  border: 12px solid #111;
+  border-radius: 36px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+  background: #0b0b10;
+  position: relative;
+  z-index: 1;
+}
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 24px;
+  background: #111;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.phone-home {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30%;
+  height: 4px;
+  background: #2a2a33;
+  border-radius: 999px;
+}
+.phone-screen {
+  position: absolute;
+  inset: 12px 8px 20px 8px;
+  border-radius: 28px;
+  overflow: auto;
+  background: #0f0f12;
+}
+
+/* Make inner app content adapt as before */
+.phone-screen .container {
+  max-width: 640px;
+  padding: 16px;
+}
+
+/* Confetti canvas overlay */
+#confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Loading bar */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.progress {
+  width: 100%;
+  max-width: 420px;
+  height: 10px;
+  background: #2a2a33;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+.progress .bar {
+  width: 30%;
+  height: 100%;
+  background: #5c7cfa;
+  border-radius: 999px;
+  animation: slide 1.2s infinite;
+}
+@keyframes slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(200%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Small visual polish for images/cards */
+.photo-grid img {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+.card {
+  backdrop-filter: saturate(1.1) blur(2px);
+}
+
+/* Desktop-only background decorations */
+@media (max-width: 768px) {
+  .viewport-bg {
+    padding: 0;
+    background: #0f0f12; /* plain on mobile */
+  }
+  .viewport-bg:before,
+  .viewport-bg:after,
+  .bg-decor {
+    display: none;
+  }
+  .phone-frame {
+    width: 100%;
+    max-width: none;
+    border-width: 10px;
+    border-radius: 28px;
+  }
+}
+
+/* In-phone Tinder-like UI */
+.stack {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  height: min(72vh, 760px);
+  margin: 8px auto 0 auto;
+}
+.t-card {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #1a1a22;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  user-select: none;
+  touch-action: pan-y;
+  will-change: transform;
+  display: flex;
+  align-items: flex-end;
+}
+.t-card .bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.05);
+}
+.t-card:after {
+  content: "";
+  position: absolute;
+  inset: 50% 0 0 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+}
+.t-info {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.t-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.t-bio {
+  opacity: 0.9;
+}
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 14px auto 0 auto;
+}
+.action-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.action-btn:active {
+  transform: scale(0.96);
+  filter: brightness(0.95);
+}
+.btn-no {
+  background: #2a2a33;
+  color: #ff6b6b;
+}
+.btn-rewind {
+  background: #212127;
+  color: #ffd166;
+}
+.btn-yes {
+  background: #2b8a3e;
+  color: #d3f9d8;
+}
+
+/* Swipe labels */
+.swipe-label {
+  position: absolute;
+  top: 18px;
+  padding: 6px 10px;
+  border: 3px solid currentColor;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  transform: rotate(-14deg);
+  opacity: 0;
+}
+.swipe-like {
+  left: 18px;
+  color: #8ce99a;
+}
+.swipe-nope {
+  right: 18px;
+  color: #ffa8a8;
+  transform: rotate(14deg);
+}
+
+/* Smaller screens inside phone */
+@media (max-height: 720px) {
+  .stack {
+    height: 66vh;
+  }
+  .action-btn {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* Tinder-like intro/permissions */
+.intro-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100% - 20px);
+}
+.intro-card {
+  background: #15151b;
+  border: 1px solid #2a2a33;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  max-width: 560px;
+  margin: 16px auto;
+}
+.intro-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-heart {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #ff6f91, #ff8fab);
+  box-shadow: 0 6px 16px rgba(255, 111, 145, 0.5);
+}
+.logo-heart span {
+  font-size: 20px;
+}
+.intro-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+.perm-sub {
+  margin-top: 6px;
+  opacity: 0.9;
+}
+.perm-list {
+  margin: 14px 0 8px 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.perm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.perm-item .icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #1c1c24;
+  border: 1px solid #2a2a33;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #ff6f91, #ff8fab);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 20px;
+  font-weight: 800;
+  width: 100%;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(255, 143, 171, 0.35);
+}
+.btn-primary:active {
+  transform: translateY(1px);
+  filter: brightness(0.96);
+}
+
+@media (max-width: 480px) {
+  .intro-card {
+    padding: 18px;
+  }
+}
+
+/* Onboarding prompt card */
+.prompt-card {
+  background: #15151b;
+  border: 1px solid #2a2a33;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  max-width: 560px;
+  margin: 16px auto;
+}
+.prompt-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+.listen-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  opacity: 0.9;
+}
+.listen-row .mic {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #1c1c24;
+  border: 1px solid #2a2a33;
+  display: grid;
+  place-items: center;
+}
+
+/* Camera capture */
+.camera-card {
+  background: #15151b;
+  border: 1px solid #2a2a33;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  max-width: 560px;
+  margin: 16px auto;
+}
+.camera-card video,
+.camera-card canvas {
+  width: 100%;
+  border-radius: 12px;
+  background: #0b0b10;
+}
+.camera-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Generation review */
+.gen-card {
+  background: #15151b;
+  border: 1px solid #2a2a33;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  max-width: 560px;
+  margin: 16px auto;
+  text-align: center;
+}
+.gen-card img {
+  max-width: 100%;
+  border-radius: 12px;
+}
+.gen-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.pill {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 700;
+}
+.pill-yes {
+  background: #2b8a3e;
+  color: #d3f9d8;
+}
+.pill-no {
+  background: #2a2a33;
+  color: #ffa8a8;
+}
