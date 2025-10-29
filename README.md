@@ -120,7 +120,6 @@ npm start
 
 - Create two users (e.g., you and a friend) to demonstrate matching.
 - Use a second browser profile or an incognito window for the second user.
-- Mobile Safari requires a `DeviceMotionEvent` permission prompt for nod/shake detection; grant it when prompted.
 
 ## Troubleshooting
 
