@@ -1265,18 +1265,20 @@ function ensureSocket() {
   });
   socket.on("chat:message", (msg) => {
     // If chat is open with this partner, append; else show a toast
-    if (
-      currentChat &&
-      (msg.from === currentChat.id || msg.from === currentChat._id)
-    ) {
-      appendChatMessage(msg, msg.from === (state.user.id || state.user._id));
-    } else {
-      showToast(
-        `${
-          msg.from === (state.user.id || state.user._id) ? "You" : "New message"
-        }: ${msg.text.slice(0, 60)}`
-      );
+    const me = state.user && (state.user.id || state.user._id);
+    if (currentChat) {
+      const themId = currentChat.id || currentChat._id;
+      const isBetweenUs =
+        (msg.from === me && msg.to === themId) ||
+        (msg.from === themId && msg.to === me);
+      if (isBetweenUs) {
+        appendChatMessage(msg, msg.from === me);
+        return;
+      }
     }
+    showToast(
+      `${msg.from === (state.user.id || state.user._id) ? "You" : "New message"}: ${msg.text.slice(0, 60)}`
+    );
   });
   return socket;
 }
@@ -1346,8 +1348,7 @@ async function openChatOverlay(them) {
     const sock = ensureSocket();
     const to = them.id || them._id;
     const uid = state.user && (state.user.id || state.user._id);
-    // Optimistic append so it appears immediately
-    appendChatMessage({ text, from: uid, to }, true);
+    // Send; rely on server echo to render (avoids duplicates)
     sock.emit("chat:send", { to, text: text.slice(0, 1000) });
     input.value = "";
   };
