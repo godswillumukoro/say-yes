@@ -1,0 +1,63 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+
+    env:
+      SERVICE_NAME: say-yes
+      REGION: us-central1
+      REPOSITORY: docker-repo
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Enable required APIs (idempotent)
+        run: |
+          gcloud services enable \
+            run.googleapis.com \
+            artifactregistry.googleapis.com \
+            cloudbuild.googleapis.com
+
+      - name: Ensure Artifact Registry repo exists (idempotent)
+        run: |
+          gcloud artifacts repositories describe ${REPOSITORY} --location=${REGION} || \
+          gcloud artifacts repositories create ${REPOSITORY} \
+            --repository-format=docker \
+            --location=${REGION} \
+            --description="Docker repo for Cloud Run"
+
+      - name: Build & Push image with Cloud Build
+        run: |
+          IMAGE=${REGION}-docker.pkg.dev/$(gcloud config get-value project)/${REPOSITORY}/${SERVICE_NAME}:${{ github.sha }}
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          gcloud builds submit --tag $IMAGE
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${SERVICE_NAME} \
+            --image $IMAGE \
+            --region ${REGION} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --cpu 1 --memory 512Mi \
+            --max-instances 1 \
+            --update-env-vars MONGODB_URI=${{ secrets.MONGODB_URI }},MONGODB_DB=sayyes,DEEPGRAM_API_KEY=${{ secrets.DEEPGRAM_API_KEY }},GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}

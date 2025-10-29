@@ -1,0 +1,20 @@
+# Ignore local-only files
+.git
+node_modules
+npm-debug.log*
+Dockerfile*
+.dockerignore
+.env
+example.env
+assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webm
+*.mp4
+*.mov
+*.wav
+*.mp3
+# Cache and OS files
+.DS_Store

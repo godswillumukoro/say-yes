@@ -14,7 +14,7 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 let io = null;
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // Simple CORS for local dev
 app.use((req, res, next) => {
