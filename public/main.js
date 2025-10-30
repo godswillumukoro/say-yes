@@ -179,6 +179,27 @@ let speakChain = Promise.resolve();
 async function speak(text) {
   // Queue TTS so prompts never overlap
   speakChain = speakChain.then(async () => {
+    // Prefer fast on-device TTS when available
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      await new Promise((resolve) => {
+        try {
+          const u = new SpeechSynthesisUtterance(String(text || ''));
+          u.rate = 1.0; // tweak if needed, 1.1 slightly faster
+          u.pitch = 1.0;
+          u.onend = resolve;
+          u.onerror = resolve;
+          // Pick a voice matching locale if possible
+          const voices = window.speechSynthesis.getVoices?.() || [];
+          const en = voices.find(v => /en[-_]/i.test(v.lang)) || voices[0];
+          if (en) u.voice = en;
+          window.speechSynthesis.speak(u);
+        } catch {
+          resolve();
+        }
+      });
+      return;
+    }
+    // Fallback to server TTS
     const res = await fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -318,21 +339,23 @@ function choiceUI(title, options) {
 
     let attempts = 0;
     while (!done) {
-      const t = (await recordOnce({ silenceMs: 1100 }))?.toLowerCase() || "";
+      // short delay to avoid capturing our own prompt
+      await new Promise((r) => setTimeout(r, 220));
+      const t = (await recordOnce({ silenceMs: 900 }))?.toLowerCase() || "";
       // Direct label match
       const direct = lowerLabels.find((lbl) => t.includes(lbl));
       if (direct) return finish(valByLabel.get(direct));
 
       // Synonyms
       if (isGender) {
-        if (/(^|\b)male|man|guy(\b|$)/.test(t)) return finish("male");
-        if (/(^|\b)female|woman|girl(\b|$)/.test(t)) return finish("female");
-        if (/non\s*-?binary|nonbinary/.test(t)) return finish("non-binary");
+        if (/\b(male|man|guy)\b/.test(t)) return finish("male");
+        if (/\b(female|woman|girl)\b/.test(t)) return finish("female");
+        if (/\b(non\s*-?binary|nonbinary)\b/.test(t)) return finish("non-binary");
       }
       if (isInterest) {
-        if (/(women|girls|ladies)/.test(t)) return finish("women");
-        if (/(men|guys|boys)/.test(t)) return finish("men");
-        if (/(everyone|both|anyone|all)/.test(t)) return finish("everyone");
+        if (/\b(women|girls|ladies)\b/.test(t)) return finish("women");
+        if (/\b(men|guys|boys)\b/.test(t)) return finish("men");
+        if (/\b(everyone|both|anyone|all)\b/.test(t)) return finish("everyone");
       }
 
       attempts++;
@@ -418,6 +441,8 @@ async function ask(question) {
     )
   );
   await speak(question);
+  // Small delay to avoid capturing trailing TTS audio
+  await new Promise((r) => setTimeout(r, 180));
   const text = await recordOnce();
   return text;
 }
