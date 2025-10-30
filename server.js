@@ -8,6 +8,7 @@ import crypto from "crypto";
 import fetch from "node-fetch";
 import { GoogleGenAI } from "@google/genai";
 import { MongoClient, ObjectId } from "mongodb";
+import { Storage } from "@google-cloud/storage";
 
 dotenv.config();
 
@@ -29,9 +30,9 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), "public")));
 
-// Storage for uploads
-const upload = multer({ dest: path.join(process.cwd(), "assets") });
-app.use("/assets", express.static(path.join(process.cwd(), "assets")));
+// Storage for uploads (memory storage; Cloud Run filesystem is ephemeral)
+const upload = multer({ storage: multer.memoryStorage() });
+app.use("/assets", express.static(path.join(process.cwd(), "assets"))); // legacy/local fallback
 
 // Client log sink (top-level)
 app.post("/api/client-log", async (req, res) => {
@@ -66,6 +67,79 @@ function saveBufferToAssets(buf, ext = "bin") {
   return `/${rel}`;
 }
 
+// Cloudflare R2 (S3-compatible) setup
+const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || "";
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || "";
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || "";
+const R2_BUCKET = process.env.R2_BUCKET || "";
+const R2_PUBLIC_BASE_URL = process.env.R2_PUBLIC_BASE_URL || ""; // e.g. https://cdn.example.com or https://<bucket>.<accountid>.r2.dev
+const R2_ENDPOINT = process.env.R2_ENDPOINT || (R2_ACCOUNT_ID ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : "");
+
+const r2Enabled = () => !!(R2_BUCKET && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && (R2_PUBLIC_BASE_URL || R2_ENDPOINT));
+
+let r2Client = null;
+if (r2Enabled()) {
+  r2Client = new S3Client({
+    region: "auto",
+    endpoint: R2_ENDPOINT,
+    forcePathStyle: false,
+    credentials: {
+      accessKeyId: R2_ACCESS_KEY_ID,
+      secretAccessKey: R2_SECRET_ACCESS_KEY,
+    },
+  });
+}
+
+// GCS setup (Always Free friendly)
+const GCS_BUCKET = process.env.GCS_BUCKET || "";
+const GCS_PUBLIC_BASE_URL = process.env.GCS_PUBLIC_BASE_URL || ""; // e.g. https://storage.googleapis.com/<bucket>
+let gcsBucket = null;
+try {
+  if (GCS_BUCKET) {
+    const storage = new Storage();
+    gcsBucket = storage.bucket(GCS_BUCKET);
+  }
+} catch (e) {
+  console.error("GCS client init failed:", e?.message || e);
+}
+
+async function saveBufferToCloudOrLocal(buf, { ext = "bin", contentType = "application/octet-stream" } = {}) {
+  // 1) Try GCS first (preferred)
+  if (gcsBucket) {
+    const id = crypto.randomBytes(8).toString("hex");
+    const key = `assets/${id}.${ext}`;
+    try {
+      const file = gcsBucket.file(key);
+      await file.save(buf, {
+        resumable: false,
+        contentType,
+        metadata: { cacheControl: "public, max-age=31536000, immutable" },
+      });
+      try { await file.makePublic(); } catch {}
+      const base = (GCS_PUBLIC_BASE_URL || `https://storage.googleapis.com/${GCS_BUCKET}`).replace(/\/$/, "");
+      return `${base}/${encodeURIComponent(key)}`;
+    } catch (e) {
+      console.error("GCS upload failed, falling back:", e?.message || e);
+    }
+  }
+  // 2) Try R2 next (if configured)
+  if (r2Client) {
+    const id = crypto.randomBytes(8).toString("hex");
+    const key = `assets/${id}.${ext}`;
+    try {
+      await r2Client.send(
+        new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, Body: buf, ContentType: contentType })
+      );
+      const base = R2_PUBLIC_BASE_URL.replace(/\/$/, "");
+      return `${base}/${encodeURIComponent(key)}`;
+    } catch (e) {
+      console.error("R2 upload failed, falling back to local:", e?.message || e);
+    }
+  }
+  // 3) Local fallback (dev only)
+  return saveBufferToAssets(buf, ext);
+}
+
 async function getUserById(idStr) {
   if (!idStr) return null;
   return Users.findOne({ _id: new ObjectId(idStr) });
@@ -84,9 +158,9 @@ app.post("/api/stt", upload.single("audio"), async (req, res) => {
     const apiKey = process.env.DEEPGRAM_API_KEY;
     if (!apiKey)
       return res.status(500).json({ error: "Missing DEEPGRAM_API_KEY" });
-    const audioPath = req.file?.path;
     const mime = req.file?.mimetype || "application/octet-stream";
-    const audioData = fs.readFileSync(audioPath);
+    const audioData = req.file?.buffer || (req.file?.path ? fs.readFileSync(req.file.path) : null);
+    if (!audioData) return res.status(400).json({ error: "no audio buffer" });
 
     const dgRes = await fetch(
       "https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true",
@@ -246,10 +320,12 @@ app.post("/api/onboarding", async (req, res) => {
 // Photo upload (camera capture)
 app.post("/api/photo", upload.single("photo"), async (req, res) => {
   try {
-    const ext = (req.file.mimetype || "").split("/").pop() || "jpg";
-    const buf = fs.readFileSync(req.file.path);
-    const rel = saveBufferToAssets(buf, ext);
-    res.json({ url: rel });
+    const mime = (req.file && req.file.mimetype) || "image/jpeg";
+    const ext = mime.split("/").pop() || "jpg";
+    const buf = req.file && (req.file.buffer || (req.file.path ? fs.readFileSync(req.file.path) : null));
+    if (!buf) return res.status(400).json({ error: "no file buffer" });
+    const url = await saveBufferToCloudOrLocal(buf, { ext, contentType: mime });
+    res.json({ url });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "photo upload failed" });
@@ -289,29 +365,28 @@ app.post("/api/generate-photos", async (req, res) => {
       mimeType = "image/jpeg";
     try {
       if (input_image_url) {
-        // Accept either relative like "/assets/..." or absolute local URLs like "http://localhost:3000/assets/..."
-        let rel = input_image_url;
-        try {
-          if (/^https?:\/\//i.test(input_image_url)) {
-            const u = new URL(input_image_url);
-            // Only allow inlining if it points to our own assets path
-            if (u.pathname && u.pathname.startsWith("/assets/"))
-              rel = u.pathname.slice(1);
-          } else if (rel.startsWith("/")) {
-            rel = rel.slice(1);
-          }
-        } catch {}
-        if (!rel.startsWith("assets/"))
-          throw new Error("Refusing to read non-assets path");
-        const abs = path.join(process.cwd(), rel);
-        const buf = fs.readFileSync(abs);
-        inlineB64 = buf.toString("base64");
-        const ext = path.extname(abs).toLowerCase();
-        mimeType = ext === ".png" ? "image/png" : "image/jpeg";
-        log(`Loaded local image ${abs} (${buf.length} bytes)`);
+        if (/^https?:\/\//i.test(input_image_url)) {
+          // Fetch remote image (e.g., Cloudflare R2 public URL)
+          const r = await fetch(input_image_url);
+          if (!r.ok) throw new Error(`fetch ${r.status}`);
+          const ab = await r.arrayBuffer();
+          const buf = Buffer.from(ab);
+          inlineB64 = buf.toString("base64");
+          const p = new URL(input_image_url).pathname.toLowerCase();
+          mimeType = p.endsWith(".png") ? "image/png" : p.endsWith(".webp") ? "image/webp" : "image/jpeg";
+          log(`Fetched remote image (${buf.length} bytes)`);
+        } else if (input_image_url.startsWith("/assets/")) {
+          // Legacy local path fallback (best-effort)
+          const abs = path.join(process.cwd(), input_image_url.replace(/^\//, ""));
+          const buf = fs.readFileSync(abs);
+          inlineB64 = buf.toString("base64");
+          const ext = path.extname(abs).toLowerCase();
+          mimeType = ext === ".png" ? "image/png" : "image/jpeg";
+          log(`Loaded local image ${abs} (${buf.length} bytes)`);
+        }
       }
     } catch (e) {
-      log(`Failed to read local image: ${e?.message}`);
+      log(`Failed to inline image: ${e?.message}`);
     }
 
     // Prepare common request pieces
@@ -343,11 +418,9 @@ app.post("/api/generate-photos", async (req, res) => {
           if (id?.data) {
             try {
               const b = Buffer.from(id.data, "base64");
-              const rel = saveBufferToAssets(
-                b,
-                (id.mimeType || "image/png").split("/")?.pop()
-              );
-              out.push(rel);
+              const ext = (id.mimeType || "image/png").split("/")?.pop();
+              const url = await saveBufferToCloudOrLocal(b, { ext, contentType: id.mimeType || "image/png" });
+              out.push(url);
             } catch (e) {
               log(`Failed save inlineData (SDK): ${e?.message}`);
             }
@@ -419,11 +492,9 @@ app.post("/api/generate-photos", async (req, res) => {
         for (const img of data.images) {
           try {
             const b = Buffer.from(img.base64, "base64");
-            const rel = saveBufferToAssets(
-              b,
-              img.mime?.split("/")?.pop() || "png"
-            );
-            out.push(rel);
+            const ext = img.mime?.split("/")?.pop() || "png";
+            const url = await saveBufferToCloudOrLocal(b, { ext, contentType: img.mime || "image/png" });
+            out.push(url);
           } catch (e) {
             log(`Failed to decode image: ${e?.message}`);
           }

@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy source (keep image small; copy only what we need)
 COPY server.js ./

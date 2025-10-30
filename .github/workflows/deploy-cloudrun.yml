@@ -70,4 +70,4 @@ jobs:
             --cpu 1 --memory 512Mi \
             --max-instances 1 \
             --project ${PROJECT_ID} \
-            --update-env-vars MONGODB_URI=${{ secrets.MONGODB_URI }},MONGODB_DB=sayyes,DEEPGRAM_API_KEY=${{ secrets.DEEPGRAM_API_KEY }},GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}
+            --update-env-vars MONGODB_URI=${{ secrets.MONGODB_URI }},MONGODB_DB=sayyes,DEEPGRAM_API_KEY=${{ secrets.DEEPGRAM_API_KEY }},GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GCS_BUCKET=${{ secrets.GCS_BUCKET }},GCS_PUBLIC_BASE_URL=${{ secrets.GCS_PUBLIC_BASE_URL }}
