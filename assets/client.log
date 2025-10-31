@@ -37,3 +37,36 @@
 [2025-10-29T17:09:06.324Z] [debug] [capturePhoto] uploading /api/photo 
 [2025-10-29T17:09:06.354Z] [debug] [capturePhoto] upload ok "/assets/d6dbcadce8bbe419.jpeg"
 [2025-10-29T17:36:29.584Z] [error] STT request failed "TypeError: Failed to fetch"
+[2025-10-31T20:12:44.041Z] [debug] [capturePhoto] init 
+[2025-10-31T20:12:56.802Z] [debug] [capturePhoto] snap clicked 
+[2025-10-31T20:12:56.864Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-31T20:12:56.895Z] [debug] [capturePhoto] upload ok "/assets/7fc4555a0a91d016.jpeg"
+[2025-10-31T21:21:05.967Z] [debug] [capturePhoto] init 
+[2025-10-31T21:21:17.498Z] [debug] [capturePhoto] snap clicked 
+[2025-10-31T21:21:17.565Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-31T21:21:17.592Z] [debug] [capturePhoto] upload ok "/assets/c1fa624977e48ccb.jpeg"
+[2025-10-31T21:24:20.137Z] [debug] [capturePhoto] init 
+[2025-10-31T21:24:42.462Z] [debug] [capturePhoto] snap clicked 
+[2025-10-31T21:24:42.520Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-31T21:24:42.541Z] [debug] [capturePhoto] upload ok "/assets/2a6370b847524461.jpeg"
+[2025-10-31T21:30:57.688Z] [error] STT request failed "TypeError: Failed to fetch"
+[2025-10-31T21:45:10.161Z] [debug] [capturePhoto] init 
+[2025-10-31T21:45:16.428Z] [debug] [capturePhoto] snap clicked 
+[2025-10-31T21:45:16.484Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-31T21:45:16.503Z] [debug] [capturePhoto] upload ok "/assets/43a3654d73e6ea59.jpeg"
+[2025-10-31T21:59:41.769Z] [debug] [capturePhoto] init 
+[2025-10-31T21:59:57.205Z] [debug] [capturePhoto] snap clicked 
+[2025-10-31T21:59:57.242Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-31T21:59:57.293Z] [debug] [capturePhoto] upload ok "/assets/30334ece66165ea4.jpeg"
+[2025-10-31T22:10:07.672Z] [debug] [capturePhoto] init 
+[2025-10-31T22:10:26.672Z] [debug] [capturePhoto] snap clicked 
+[2025-10-31T22:10:26.711Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-31T22:10:26.734Z] [debug] [capturePhoto] upload ok "/assets/19c3235a0bd5972d.jpeg"
+[2025-10-31T22:14:30.641Z] [debug] [capturePhoto] init 
+[2025-10-31T22:14:39.389Z] [debug] [capturePhoto] snap clicked 
+[2025-10-31T22:14:39.455Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-31T22:14:39.485Z] [debug] [capturePhoto] upload ok "/assets/86d144a402bb7b56.jpeg"
+[2025-10-31T22:16:49.292Z] [debug] [capturePhoto] init 
+[2025-10-31T22:17:04.722Z] [debug] [capturePhoto] snap clicked 
+[2025-10-31T22:17:04.784Z] [debug] [capturePhoto] uploading /api/photo 
+[2025-10-31T22:17:04.833Z] [debug] [capturePhoto] upload ok "/assets/b9fd82d036473438.jpeg"

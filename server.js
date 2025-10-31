@@ -73,9 +73,17 @@ const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || "";
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || "";
 const R2_BUCKET = process.env.R2_BUCKET || "";
 const R2_PUBLIC_BASE_URL = process.env.R2_PUBLIC_BASE_URL || ""; // e.g. https://cdn.example.com or https://<bucket>.<accountid>.r2.dev
-const R2_ENDPOINT = process.env.R2_ENDPOINT || (R2_ACCOUNT_ID ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : "");
+const R2_ENDPOINT =
+  process.env.R2_ENDPOINT ||
+  (R2_ACCOUNT_ID ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : "");
 
-const r2Enabled = () => !!(R2_BUCKET && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && (R2_PUBLIC_BASE_URL || R2_ENDPOINT));
+const r2Enabled = () =>
+  !!(
+    R2_BUCKET &&
+    R2_ACCESS_KEY_ID &&
+    R2_SECRET_ACCESS_KEY &&
+    (R2_PUBLIC_BASE_URL || R2_ENDPOINT)
+  );
 
 let r2Client = null;
 if (r2Enabled()) {
@@ -103,7 +111,10 @@ try {
   console.error("GCS client init failed:", e?.message || e);
 }
 
-async function saveBufferToCloudOrLocal(buf, { ext = "bin", contentType = "application/octet-stream" } = {}) {
+async function saveBufferToCloudOrLocal(
+  buf,
+  { ext = "bin", contentType = "application/octet-stream" } = {}
+) {
   // 1) Try GCS first (preferred)
   if (gcsBucket) {
     const id = crypto.randomBytes(8).toString("hex");
@@ -115,9 +126,15 @@ async function saveBufferToCloudOrLocal(buf, { ext = "bin", contentType = "appli
         contentType,
         metadata: { cacheControl: "public, max-age=31536000, immutable" },
       });
-      try { await file.makePublic(); } catch {}
-      const base = (GCS_PUBLIC_BASE_URL || `https://storage.googleapis.com/${GCS_BUCKET}`).replace(/\/$/, "");
-      return `${base}/${encodeURIComponent(key)}`;
+      try {
+        await file.makePublic();
+      } catch {}
+      const base = (
+        GCS_PUBLIC_BASE_URL || `https://storage.googleapis.com/${GCS_BUCKET}`
+      ).replace(/\/$/, "");
+      // Encode each path segment so '/' remain as separators (avoid percent-encoding slashes)
+      const safeKey = key.split("/").map(encodeURIComponent).join("/");
+      return `${base}/${safeKey}`;
     } catch (e) {
       console.error("GCS upload failed, falling back:", e?.message || e);
     }
@@ -128,12 +145,22 @@ async function saveBufferToCloudOrLocal(buf, { ext = "bin", contentType = "appli
     const key = `assets/${id}.${ext}`;
     try {
       await r2Client.send(
-        new PutObjectCommand({ Bucket: R2_BUCKET, Key: key, Body: buf, ContentType: contentType })
+        new PutObjectCommand({
+          Bucket: R2_BUCKET,
+          Key: key,
+          Body: buf,
+          ContentType: contentType,
+        })
       );
       const base = R2_PUBLIC_BASE_URL.replace(/\/$/, "");
-      return `${base}/${encodeURIComponent(key)}`;
+      // Same safe-encoding for R2 keys
+      const safeKey = key.split("/").map(encodeURIComponent).join("/");
+      return `${base}/${safeKey}`;
     } catch (e) {
-      console.error("R2 upload failed, falling back to local:", e?.message || e);
+      console.error(
+        "R2 upload failed, falling back to local:",
+        e?.message || e
+      );
     }
   }
   // 3) Local fallback (dev only)
@@ -159,7 +186,9 @@ app.post("/api/stt", upload.single("audio"), async (req, res) => {
     if (!apiKey)
       return res.status(500).json({ error: "Missing DEEPGRAM_API_KEY" });
     const mime = req.file?.mimetype || "application/octet-stream";
-    const audioData = req.file?.buffer || (req.file?.path ? fs.readFileSync(req.file.path) : null);
+    const audioData =
+      req.file?.buffer ||
+      (req.file?.path ? fs.readFileSync(req.file.path) : null);
     if (!audioData) return res.status(400).json({ error: "no audio buffer" });
 
     const dgRes = await fetch(
@@ -322,9 +351,24 @@ app.post("/api/photo", upload.single("photo"), async (req, res) => {
   try {
     const mime = (req.file && req.file.mimetype) || "image/jpeg";
     const ext = mime.split("/").pop() || "jpg";
-    const buf = req.file && (req.file.buffer || (req.file.path ? fs.readFileSync(req.file.path) : null));
+    const buf =
+      req.file &&
+      (req.file.buffer ||
+        (req.file.path ? fs.readFileSync(req.file.path) : null));
     if (!buf) return res.status(400).json({ error: "no file buffer" });
     const url = await saveBufferToCloudOrLocal(buf, { ext, contentType: mime });
+    // Optionally associate with a user if userId provided (body or query)
+    const userId = String(req.body?.userId || req.query?.userId || "").trim();
+    if (userId && Users) {
+      try {
+        await Users.updateOne(
+          { _id: new ObjectId(userId) },
+          { $push: { photos: url } }
+        );
+      } catch (e) {
+        console.warn("Failed to attach photo to user", e?.message || e);
+      }
+    }
     res.json({ url });
   } catch (e) {
     console.error(e);
@@ -373,11 +417,18 @@ app.post("/api/generate-photos", async (req, res) => {
           const buf = Buffer.from(ab);
           inlineB64 = buf.toString("base64");
           const p = new URL(input_image_url).pathname.toLowerCase();
-          mimeType = p.endsWith(".png") ? "image/png" : p.endsWith(".webp") ? "image/webp" : "image/jpeg";
+          mimeType = p.endsWith(".png")
+            ? "image/png"
+            : p.endsWith(".webp")
+            ? "image/webp"
+            : "image/jpeg";
           log(`Fetched remote image (${buf.length} bytes)`);
         } else if (input_image_url.startsWith("/assets/")) {
           // Legacy local path fallback (best-effort)
-          const abs = path.join(process.cwd(), input_image_url.replace(/^\//, ""));
+          const abs = path.join(
+            process.cwd(),
+            input_image_url.replace(/^\//, "")
+          );
           const buf = fs.readFileSync(abs);
           inlineB64 = buf.toString("base64");
           const ext = path.extname(abs).toLowerCase();
@@ -392,11 +443,11 @@ app.post("/api/generate-photos", async (req, res) => {
     // Prepare common request pieces
     const model = process.env.GOOGLE_IMAGE_MODEL || "gemini-2.5-flash-image";
     const partsSdk = [
-      { text: prompt || "Refine this photo into a date-ready portrait." },
+      { text: prompt || "A cinematic portrait of a young man in soft golden hour lighting, wearing a relaxed open-collar shirt. The expression — thoughtful yet inviting. Subtle bokeh lights in the background hint at evening city life, evoking anticipation before a first date." },
       ...(inlineB64 ? [{ inlineData: { mimeType, data: inlineB64 } }] : []),
     ];
     const partsHttp = [
-      { text: prompt || "Refine this photo into a date-ready portrait." },
+      { text: prompt || "A cinematic portrait of a young man in soft golden hour lighting, wearing a relaxed open-collar shirt. The expression — thoughtful yet inviting. Subtle bokeh lights in the background hint at evening city life, evoking anticipation before a first date." },
       ...(inlineB64
         ? [{ inline_data: { mime_type: mimeType, data: inlineB64 } }]
         : []),
@@ -419,7 +470,10 @@ app.post("/api/generate-photos", async (req, res) => {
             try {
               const b = Buffer.from(id.data, "base64");
               const ext = (id.mimeType || "image/png").split("/")?.pop();
-              const url = await saveBufferToCloudOrLocal(b, { ext, contentType: id.mimeType || "image/png" });
+              const url = await saveBufferToCloudOrLocal(b, {
+                ext,
+                contentType: id.mimeType || "image/png",
+              });
               out.push(url);
             } catch (e) {
               log(`Failed save inlineData (SDK): ${e?.message}`);
@@ -493,7 +547,10 @@ app.post("/api/generate-photos", async (req, res) => {
           try {
             const b = Buffer.from(img.base64, "base64");
             const ext = img.mime?.split("/")?.pop() || "png";
-            const url = await saveBufferToCloudOrLocal(b, { ext, contentType: img.mime || "image/png" });
+            const url = await saveBufferToCloudOrLocal(b, {
+              ext,
+              contentType: img.mime || "image/png",
+            });
             out.push(url);
           } catch (e) {
             log(`Failed to decode image: ${e?.message}`);
@@ -508,13 +565,14 @@ app.post("/api/generate-photos", async (req, res) => {
             if (inl?.data) {
               try {
                 const b = Buffer.from(inl.data, "base64");
-                const rel = saveBufferToAssets(
+                const savedUrl = await saveBufferToCloudOrLocal(
                   b,
-                  (inl.mime_type || inl.mimeType || "image/png")
-                    .split("/")
-                    ?.pop()
+                  {
+                    ext: (inl.mime_type || inl.mimeType || "image/png").split("/")?.pop(),
+                    contentType: inl.mime_type || inl.mimeType || "image/png",
+                  }
                 );
-                out.push(rel);
+                out.push(savedUrl);
               } catch (e) {
                 log(`Failed save inline_data: ${e?.message}`);
               }
@@ -540,7 +598,21 @@ app.get("/api/candidates", async (req, res) => {
   try {
     const userId = String(req.query.userId || "");
     if (!userId) return res.status(400).json({ error: "userId required" });
-    const others = await listOtherUsers(userId);
+
+    // Load current user to apply interest-based filtering
+    let me = null;
+    try {
+      me = await getUserById(userId);
+    } catch {}
+
+    // Build a gender filter based on the current user's "interestedIn"
+    const filter = { _id: { $ne: new ObjectId(userId) } };
+    const interest = String(me?.interestedIn || "").toLowerCase();
+    if (interest === "women") filter.gender = { $in: ["female", "woman", "women"] };
+    else if (interest === "men") filter.gender = { $in: ["male", "man", "men"] };
+    // If "everyone" or empty, do not add a gender filter.
+
+    const others = await Users.find(filter).sort({ _id: -1 }).toArray();
     res.json({
       candidates: others.map((u) => ({
         id: u._id.toString(),
@@ -871,7 +943,7 @@ client
     });
 
     server.listen(PORT, () => {
-      console.log(`sayYes server running http://localhost:${PORT}`);
+      console.log(`SayYes server running http://localhost:${PORT}`);
     });
   })
   .catch((err) => {

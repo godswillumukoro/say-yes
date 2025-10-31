@@ -1,3 +1,25 @@
+// Provide a consistent placeholder image
+function placeholderImage() {
+  return "/assets/placeholder.jpeg";
+}
+
+// Normalize photo URLs so the UI works with:
+// - Absolute URLs (e.g., https://storage.googleapis.com/bucket/assets/..)
+// - Root-relative URLs (/assets/...)
+// - Relative paths (assets/...)
+// - Data URLs (data:image/...)
+function normalizePhotoUrl(p) {
+  if (!p || typeof p !== "string") return placeholderImage();
+  const s = p.trim();
+  if (!s) return placeholderImage();
+  if (/^data:/i.test(s)) return s;
+  if (/^https?:\/\//i.test(s)) return s;
+  if (s.startsWith("/")) return s; // already root-relative
+  if (s.startsWith("assets/")) return "/" + s; // make root-relative
+  // Anything else: try to make it root-relative
+  return "/" + s.replace(/^\/+/, "");
+}
+
 const state = {
   user: null,
   currentStep: "welcome",
@@ -163,7 +185,9 @@ async function waitForCommand(phrases = [], { retries = 3 } = {}) {
   const norm = phrases.map((p) => p.toLowerCase());
   for (let i = 0; i < retries; i++) {
     try {
-      const text = (await recordOnce({ silenceMs: 900 }))?.toLowerCase() || "";
+      // brief pause before listening so users have time to respond
+      await new Promise((r) => setTimeout(r, 300));
+      const text = (await recordOnce({ silenceMs: 1500, maxMs: 12000 }))?.toLowerCase() || "";
       if (norm.some((p) => text.includes(p))) return true;
     } catch (e) {
       // Likely blocked mic permission; prompt user and retry
@@ -221,7 +245,7 @@ async function speak(text) {
   return speakChain;
 }
 
-async function recordOnce({ silenceMs = 1200, maxMs = 8000 } = {}) {
+async function recordOnce({ silenceMs = 1500, maxMs = 12000 } = {}) {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
   const chunks = [];
@@ -341,7 +365,7 @@ function choiceUI(title, options) {
     while (!done) {
       // short delay to avoid capturing our own prompt
       await new Promise((r) => setTimeout(r, 220));
-      const t = (await recordOnce({ silenceMs: 900 }))?.toLowerCase() || "";
+      const t = (await recordOnce({ silenceMs: 1500, maxMs: 12000 }))?.toLowerCase() || "";
       // Direct label match
       const direct = lowerLabels.find((lbl) => t.includes(lbl));
       if (direct) return finish(valByLabel.get(direct));
@@ -567,6 +591,11 @@ async function capturePhoto() {
           showLoading("Uploading photo...");
           const fd = new FormData();
           fd.append("photo", blob, "photo.jpg");
+          // If a user already exists (post-onboarding), attach their id so server can save to Mongo
+          try {
+            const uid = (state.user && (state.user.id || state.user._id)) || "";
+            if (uid) fd.append("userId", String(uid));
+          } catch {}
           logClient("debug", "[capturePhoto] uploading /api/photo");
           const r = await fetch("/api/photo", { method: "POST", body: fd });
           if (!r.ok) {
@@ -659,7 +688,7 @@ async function onboarding() {
     )
   );
   await speak(
-    "Welcome to sayYes. Voice-first dating. Swipe with your voice or tap."
+    "Welcome to SayYes. Voice-first dating. Swipe with your voice or tap."
   );
 
   // Name (voice prompt and listen)
@@ -756,16 +785,45 @@ async function onboarding() {
             genPhotos.length
           }. Say yes to keep, or no to skip.`
         );
-        const ans = normalizeYesNo(await recordOnce());
-        if (ans) photos.push(p);
-        const skipBtn = document.getElementById("skip");
-        const keepBtn = document.getElementById("keep");
-        if (skipBtn && keepBtn) {
-          skipBtn.onclick = () => {};
-          keepBtn.onclick = () => {
-            photos.push(p);
-          };
-        }
+
+        // Wait for either voice or button click (voice wins if given)
+        const keep = await (async () => {
+          return await new Promise(async (resolve) => {
+            let resolved = false;
+            const cleanup = () => {
+              const kb = document.getElementById('keep');
+              const sb = document.getElementById('skip');
+              if (kb) kb.onclick = null;
+              if (sb) sb.onclick = null;
+            };
+
+            const kb = document.getElementById('keep');
+            const sb = document.getElementById('skip');
+            if (kb) kb.onclick = () => { if (!resolved) { resolved = true; cleanup(); resolve(true); } };
+            if (sb) sb.onclick = () => { if (!resolved) { resolved = true; cleanup(); resolve(false); } };
+
+            // voice path
+            (async () => {
+              try {
+                const v = normalizeYesNo(await recordOnce({ silenceMs: 900 }));
+                if (!resolved && v !== null) {
+                  resolved = true;
+                  cleanup();
+                  resolve(!!v);
+                }
+              } catch (e) {
+                // ignore
+              }
+            })();
+
+            // fallback timeout
+            setTimeout(() => {
+              if (!resolved) { resolved = true; cleanup(); resolve(false); }
+            }, 12000);
+          });
+        })();
+
+        if (keep) photos.push(p);
       }
       break;
     }
@@ -837,7 +895,13 @@ async function loadCandidates() {
     `/api/candidates?userId=${encodeURIComponent(String(state.user.id))}`
   );
   const { candidates } = await r.json();
-  state.candidates = candidates;
+  // Normalize photo URLs so frontend can render them uniformly
+  state.candidates = (candidates || []).map((c) => ({
+    ...c,
+    photos: Array.isArray(c.photos)
+      ? c.photos.map((p) => normalizePhotoUrl(p) || placeholderImage())
+      : [],
+  }));
   state.idx = 0;
 }
 
@@ -1006,7 +1070,7 @@ async function showCandidate() {
     <div class="container">
       <div class="stack">
         <div class="t-card" id="tcard">
-          <div class="bg" style="background-image:url('${mainPhoto}')"></div>
+          <div class="bg"></div>
           <div class="swipe-label swipe-like" id="likeLabel">LIKE</div>
           <div class="swipe-label swipe-nope" id="nopeLabel">NOPE</div>
           <div class="t-info">
@@ -1030,6 +1094,31 @@ async function showCandidate() {
     </div>
   `);
   render(ui);
+
+  // Apply background image after render so data URLs and remote URLs display correctly
+  const bgEl = ui.querySelector('.bg');
+  if (bgEl) {
+    try {
+      // Preload to catch errors (403/404/CORS) and fallback to placeholder
+      const img = new Image();
+      img.onload = () => {
+        bgEl.style.backgroundImage = `url("${mainPhoto}")`;
+        bgEl.style.backgroundSize = 'cover';
+        bgEl.style.backgroundPosition = 'center';
+      };
+      img.onerror = (err) => {
+        console.warn('Image failed to load, using placeholder', mainPhoto, err);
+        bgEl.style.backgroundImage = `url("${placeholderImage()}")`;
+        bgEl.style.backgroundSize = 'cover';
+        bgEl.style.backgroundPosition = 'center';
+      };
+      // Start load (this will trigger onload/onerror)
+      img.src = mainPhoto;
+    } catch (e) {
+      console.warn('Failed set background image', e);
+      bgEl.style.backgroundImage = `url("${placeholderImage()}")`;
+    }
+  }
 
   const tcard = ui.querySelector("#tcard");
   const likeLabel = ui.querySelector("#likeLabel");
