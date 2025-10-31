@@ -1,162 +1,100 @@
-# sayYes – Voice-first dating app (hackathon prototype)
+# SayYes — Dating, but make it voice-only
 
-A simple, voice-controlled dating app using:
+**Live:** https://say-yes-476473917671.us-central1.run.app/
 
-- Frontend: vanilla HTML/CSS/JS
-- Backend: Node.js (Express), MongoDB
-- Voice: Deepgram STT/TTS
-- Image Gen: Google AI Studio (Nano Banana) for photo generation
+## What is this?
 
-Focus:
+A dating app where you never touch a keyboard. Everything—onboarding, swiping, matching—happens through conversation. Just you, your voice, and finding someone special.
 
-- Voice-only onboarding (name, age, bio, email, phone)
-- Camera capture and optional photo enhancement via image generation
-- Voice and gesture (nod/shake) swiping
-- Mutual match screen with both profiles
+## The idea
+
+Dating apps are exhausting. Type your bio. Pick the perfect photos. Endless swiping. It's work.
+
+I wanted something simpler: talk to the app like a friend, let AI handle your photos, say "yes" or "no" to matches. When two people like each other, boom—you're connected.
+
+## How it works
+
+1. **Voice onboarding** — The app asks your name, age, bio, contact info. You just answer naturally.
+2. **AI photos** — Take a quick selfie. Google Nano Banana transforms it into professional, date-ready portraits. Say yes to the ones you like.
+3. **Voice swiping** — See potential matches. Say "yeah," "absolutely," "hell yeah" to like. Say "nope," "pass," "nah" to skip.
+4. **Instant matches** — When you both say yes, you get each other's details. Start chatting.
+
+## Why goose made this possible
+
+I've known Angie Jones and Jason Lengstorf for a while. When they presented goose at the Web Dev Challenge Season 2 Episode 10, I watched the video that same day. The concept of AI agents that could plan, code, debug, and deploy? That hit different.
+
+But I didn't try it. Work kept me buried.
+
+When this hackathon dropped, I had maybe 2 hours a day. Building a full-stack app with voice integration, AI image generation, WebSockets, and deployment? Normally that's weeks of nights and weekends.
+
+**goose changed everything.**
+
+I split the work across specialized agents:
+
+- **Planner agent** mapped the entire architecture—database, APIs, deployment strategy
+- **Backend agent** built the Express server, MongoDB setup, swipe logic, match detection
+- **Voice agent** handled all the Deepgram integration—made the conversations feel natural, not robotic
+- **Image agent** connected the camera to Google's API, generated the portraits
+- **Testing agent** caught bugs I'd never have found—race conditions, CORS issues, voice command edge cases etc.
+
+They worked in parallel. While one built the backend, another handled voice flows. When I had 30 minutes between meetings, I'd check in and redirect. When testers said responses felt stiff, I told the voice agent to warm it up—done in minutes.
+
+Without goose, I'd still be writing API endpoints. With goose, I shipped a working app in days.
+
+That's the real magic. Not that it's faster—it's that it makes building possible again when life gets busy.
+
+## The tech (briefly)
+
+- Frontend: HTML, CSS, vanilla JS
+- Backend: Node.js, Express, MongoDB
+- Voice: Deepgram (STT/TTS)
+- Images: Google Nano Banana
+- Real-time: WebSockets
+- Deployed: Google Cloud Run
+
+## Setup (if you want to run it)
+
+```bash
+# Clone and install
+cd say-yes
+npm install
+
+# Add your keys to .env
+DEEPGRAM_API_KEY=your_key
+GOOGLE_API_KEY=your_key
+MONGODB_URI=mongodb://localhost:27017
+
+# Run
+npm start
+# Visit http://localhost:3000
+```
+
+**Note:** You'll need MongoDB running locally or an Atlas connection.
+
+## Why this matters
+
+Voice interfaces aren't gimmicks. They're the future for accessibility, multitasking, and anyone tired of tapping screens all day.
+
+But more than that—this project proved to me that goose isn't just a productivity tool. It's what makes ambitious ideas achievable when you have real constraints.
+
+I've always wanted to build faster. goose showed me I can.
+
+## A love letter to goose
+
+This hackathon asked us to eliminate keyboards. But my real constraint was time.
+
+goose eliminated that constraint.
+
+It gave me a team of specialists who worked relentlessly while I juggled everything else. The agents didn't get tired. They didn't forget details. They just executed.
+
+That's transformative.
+
+Not because it replaces developers—because it multiplies what we're capable of when we don't have the luxury of 12-hour coding marathons anymore.
+
+Thank you to Angie, Jason, and the entire goose team for bringing to light something that genuinely changes how we create.
+
+This is just the beginning.
 
 ---
 
-## Prerequisites
-
-- Node.js 18+ and npm
-  - macOS (Homebrew):
-    ```bash
-    brew install node
-    ```
-- MongoDB (local) or Atlas
-  - Local (Homebrew):
-    ```bash
-    brew tap mongodb/brew
-    brew install mongodb-community@7.0
-    brew services start mongodb-community@7.0
-    # Mongo runs on mongodb://localhost:27017 by default
-    ```
-  - Or use MongoDB Atlas and copy its connection string to MONGODB_URI
-- API keys / DB:
-  - Deepgram STT/TTS: `DEEPGRAM_API_KEY`
-  - Google AI Studio: `GOOGLE_API_KEY`
-  - MongoDB connection: `MONGODB_URI` (default: mongodb://localhost:27017) and `MONGODB_DB` (default: sayyes)
-
-## Setup
-
-1. Open the project directory:
-
-   ```bash
-   cd /Users/mac/code/say-yes
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file (next to `server.js`) with your keys:
-
-   ```bash
-   cp example.env .env
-   # then edit .env and fill values
-   ```
-
-   .env contents (example):
-
-   ```bash
-   DEEPGRAM_API_KEY=your_deepgram_key
-   GOOGLE_API_KEY=your_google_key
-   MONGODB_URI=mongodb://localhost:27017
-   MONGODB_DB=sayyes
-   ```
-
-## Run the app
-
-Ensure MongoDB is running locally (or that your Atlas URI is reachable), then:
-
-```bash
-npm start
-```
-
-- Server runs at: <http://localhost:3000>
-- Static frontend is served from `public/`
-- Uploaded/generated images are stored under `assets/` and served at `/assets/...`
-
-## Using the app
-
-1. Welcome screen: tap/click once to proceed.
-2. Voice onboarding prompts:
-   - “What’s your name?”
-   - “What’s your age?” (must be 18+)
-   - “Give me a short bio about you.”
-   - “What email should matches contact you at?”
-   - “What phone number should matches contact you at?”
-3. Photo step:
-   - Asked: “Would you like me to take a photo of you? Say yes to proceed.”
-   - If yes, the camera opens, you take a photo, then we optionally call Google image generation to produce date-ready portraits.
-   - You can say yes/no for each generated photo to add it to your profile.
-4. Browse/swipe:
-   - Say “yes/yeah/yup/…” (or nod) to like, “no/nope/nah/…” (or shake) to pass.
-   - On mutual likes, a match page appears showing both names, ages, bio, email, and phone.
-
-## Image generation
-
-- Prompt used (editable in `public/main.js`):
-  ```
-  A cinematic portrait of a young man in soft golden hour lighting, wearing a relaxed open-collar shirt. The expression — thoughtful yet inviting. Subtle bokeh lights in the background hint at evening city life, evoking anticipation before a first date.
-  ```
-- The backend endpoint `/api/generate-photos` is a placeholder proxy for Google AI Studio "Nano Banana". Once you confirm the exact model ID and payload format, update `server.js` accordingly (search for `generate-photos`). The app still works if this endpoint returns no photos (it will simply skip adding generated images).
-
-## Endpoints (for reference)
-
-- `POST /api/stt` – Deepgram STT proxy (multipart: audio)
-- `POST /api/tts` – Deepgram TTS proxy (JSON: { text }) returns audio/mpeg
-- `POST /api/onboarding` – Create a user profile
-- `POST /api/photo` – Upload camera photo, returns URL under `/assets`
-- `POST /api/generate-photos` – Generate enhanced portraits (placeholder proxy)
-- `GET /api/candidates?userId=` – Get other users
-- `POST /api/like` – Like/pass; returns `{ isMatch, match }` when mutual
-- `GET /api/match/:id?userId=` – Fetch match details
-- `GET /api/matches?userId=` – List all your matches
-
-## Demo tips
-
-- Create two users (e.g., you and a friend) to demonstrate matching.
-- Use a second browser profile or an incognito window for the second user.
-
-## Troubleshooting
-
-- Mongo connection error: ensure the service is running (`brew services list`) or use a valid Atlas URI in `.env`.
-- "npm: command not found": install Node.js (see Prerequisites).
-- Mic/camera blocked: allow permissions in the browser.
-- No generated photos: verify `GOOGLE_API_KEY` and update the Google model endpoint in `server.js`. You can still proceed without generated photos.
-- TTS/STT not speaking/transcribing: verify `DEEPGRAM_API_KEY` and network access.
-
-## Development notes
-
-- DB: MongoDB collections `users` and `likes`. Mutual matches are pairs in `likes` with reciprocal documents.
-- Assets: Uploaded/generated images are written to `assets/` and served at `/assets/...`.
-- No build step; purely static frontend + Node backend.
-- Minimal CSS for a clean dark UI.
-
-## Ready to kickstart?
-
-Yes. Once MongoDB is running, Node is installed, and your `.env` is set, run `npm start` and onboard with your voice, capture a photo, and swipe with voice/gestures. If the Google image generation endpoint isn’t finalized yet, onboarding still completes; you can say “no” to the photo step or proceed and it will simply skip adding generated images if none are returned.
-
-## End of list behavior
-
-- When you reach the end of the stack, the app shows:
-
-  All caught up! Looks like you’ve seen everyone for now.
-
-- There is no refresh button to prevent looping through the same people. New candidates will appear automatically as they become available, and you’ll see matches when they’re mutual.
-
-## Log out / switch user (same browser)
-
-- The app stores a lightweight session in localStorage under `sayyes_user`.
-- To log out and start fresh, open the browser DevTools console and run either:
-  ```javascript
-  clearUser();
-  location.reload();
-  // or
-  localStorage.removeItem("sayyes_user");
-  location.reload();
-  ```
-- After reload, onboarding will start again and you can create/sign in as another user.
+**Built with goose. Controlled by voice. Made possible by not giving up.**
